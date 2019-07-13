@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, th, td {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+
+th, td {
+	padding: 1px;
+}
+
+button {
+	height: 25px;
+	width: 50px;
+}
+</style>
+</head>
+<body onload="init();">
+
+	<table id="myTable" style="width: 100%">
+	</table>
+
+	<h1>Take a snapshot of the current video stream</h1>
+	Click on the Start WebCam button.
+	<p>
+		<button onclick="startWebcam();">Start Cam</button>
+		<button onclick="addRows();">add row</button>
+	</p>
+	<video onclick="snapshot(this);" width=500 height=500 id="video"
+		controls autoplay></video>
+
+	<canvas id="myCanvas" width="400" height="350"></canvas>
+
+</body>
+<script>
+	//--------------------
+	// GET USER MEDIA CODE
+	//--------------------
+	navigator.getUserMedia = (navigator.getUserMedia
+			|| navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+
+	var video;
+	var webcamStream;
+
+
+	function startWebcam() {
+		if (navigator.getUserMedia) {
+			navigator.getUserMedia(
+
+			// constraints
+			{
+				video : true,
+				audio : false
+			},
+
+			// successCallback
+			function(localMediaStream) {
+				video = document.querySelector('video');
+				video.srcObject = localMediaStream;
+				webcamStream = localMediaStream;
+			},
+
+			// errorCallback
+			function(err) {
+				console.log("The following error occured: " + err);
+			});
+		} else {
+			console.log("getUserMedia not supported");
+		}
+	}
+
+	function stopWebcam() {
+		webcamStream.stop();
+	}
+	//---------------------
+	// TAKE A SNAPSHOT CODE
+	//---------------------
+	var canvas, ctx;
+
+	function init() {
+		// Get the canvas and obtain a context for
+		// drawing in it
+		canvas = document.getElementById("myCanvas");
+		ctx = canvas.getContext('2d');
+	}
+	/*
+	val - id of <a> where image has to be inserted to download
+	*/
+	function download(val) {
+		ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+		var download = document.getElementById(val);
+		var image = document.getElementById("myCanvas").toDataURL("image/png")
+				.replace("image/png", "image/octet-stream");
+		download.setAttribute("href", image);
+	}
+	
+
+	
+	function addRows() {
+		var rowCount=27;
+		var colCount=25;
+		
+		var table = document.getElementById("myTable");
+		
+		for(var i=0;i<rowCount;i++){
+			var row = table.insertRow(i);
+			for(var j=0;j<colCount;j++){
+				var xyPair = "";
+				xyPair = xyPair.concat("(", i,",",j,")");
+				//alert(xyPair);
+				
+				var downloadXX = "download";
+				downloadXX = downloadXX.concat(xyPair);
+				//alert(downloadXX);
+				
+				var button = document.createElement("button");
+				button.setAttribute("value",downloadXX);
+				button.setAttribute("onClick", "download(this.value)");
+				button.innerHTML = xyPair;
+				
+				var aLink = document.createElement("a");
+				aLink.setAttribute("id", downloadXX);
+				var png = xyPair.concat(".png");
+				aLink.setAttribute("download", png);
+				aLink.appendChild(button);	
+				var cell1 = row.insertCell(j);
+				cell1.appendChild(aLink);
+				
+			}
+		}
+	}
+</script>
+</html>
